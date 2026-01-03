@@ -145,7 +145,7 @@ class DictionaryTranslator:
                 output.append({"text": tok, "pos": "UNK", "metadata": {}})
                 i += 1
                 continue
-            variant_tokens = entry.raw_target_variants()[0]
+            variant_tokens = self._select_variant(entry, direction=direction)
             for variant_token in variant_tokens:
                 output.append({"text": variant_token, "pos": entry.part_of_speech, "metadata": entry.metadata})
             i += match_len
@@ -167,3 +167,19 @@ class DictionaryTranslator:
             if window in key_map:
                 return size, key_map[window][0]
         return 0, None
+
+    def _select_variant(self, entry: DictionaryEntry, direction: str = "forward") -> Tuple[str, ...]:
+        metadata = entry.metadata or {}
+        key = "preferred_variant" if direction == "forward" else "reverse_variant"
+        chosen_index: Optional[int] = None
+        if key in metadata:
+            try:
+                idx = int(metadata[key])
+                if idx >= 1:
+                    chosen_index = idx - 1
+            except ValueError:
+                chosen_index = None
+        variants = entry.raw_target_variants()
+        if chosen_index is not None and chosen_index < len(variants):
+            return variants[chosen_index]
+        return variants[0] if variants else tuple()

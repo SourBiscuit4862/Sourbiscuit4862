@@ -87,3 +87,15 @@ def test_reverse_translation(tmp_path: Path):
     translator = DictionaryTranslator(dictionary)
     result = translator.translate("hola", direction="reverse")
     assert result == "hello"
+
+
+def test_preferred_variant_metadata(tmp_path: Path):
+    dictionary = write_dictionary(
+        tmp_path,
+        """
+        color = NOUN = colour/color | preferred_variant=2
+        """,
+    )
+    translator = DictionaryTranslator(dictionary)
+    result = translator.translate("color")
+    assert result == "color"
